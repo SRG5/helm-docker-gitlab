@@ -1,0 +1,53 @@
+stages:
+  - build
+  - chart
+  - pages
+
+variables:
+  IMAGE_NAME: "$DOCKERHUB_USERNAME/helm-docker-gitlab:$CI_PIPELINE_IID"
+
+build_image:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - docker build -t "$IMAGE_NAME" .
+    - docker push "$IMAGE_NAME"
+    - echo "$IMAGE_NAME" > version.txt
+    - git config --global user.name "$CI_GIT_USER"
+    - git config --global user.email "$CI_GIT_EMAIL"
+    - git checkout "$CI_COMMIT_REF_NAME"
+    - git add version.txt
+    - git commit -m "CI -- update version.txt [ci skip]"
+    - git push https://$CI_PUSH_USER:$CI_PUSH_TOKEN@gitlab.com/$CI_PROJECT_PATH.git HEAD:$CI_COMMIT_REF_NAME
+  artifacts:
+    paths:
+      - version.txt
+
+package_chart:
+  stage: chart
+  image:
+    name: alpine/helm:3.14.0
+    entrypoint: [""]
+  script:
+    - mkdir -p public
+    - helm lint helm-docker-gitlab/
+    - helm package helm-docker-gitlab/ --destination public/
+    - helm repo index public/ --url "$CI_PAGES_URL"
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+
+pages:
+  stage: pages
+  script:
+    - echo "Publishing Helm chart to GitLab Pages"
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
