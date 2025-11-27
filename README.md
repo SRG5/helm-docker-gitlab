@@ -2,7 +2,7 @@
 
 This project demonstrates a full CI/CD pipeline using **GitLab CI**, **Docker Hub**, **Helm**, and **GitLab Pages** to deploy a simple Flask app on a Kubernetes cluster.
 
-It is designed for beginners who want to learn how CI/CD pipelines, Docker, Helm charts, and Kubernetes deployments work together.
+it showcases core DevOps principles such as CI/CD pipelines, Docker, Helm charts, and Kubernetes deployments work together.
 
 ---
 
